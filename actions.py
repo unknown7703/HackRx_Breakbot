@@ -18,7 +18,7 @@ def book_appointment()->str:
     return {reply["message"]}
 
 # cancel an appointment
-def book_appointment(appointment_id: int = 1)->str:
+def cancel_appointment()->str:
     """Use this function to cancel an appointment.
 
     Args:
