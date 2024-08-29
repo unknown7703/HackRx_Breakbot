@@ -16,18 +16,16 @@ const ChatBotWindow = () => {
     addMessageToChatHistory('user', userInput);
 
     try {
-      const response = await fetch('https://21bbs0122-bajaj-fullstack.vercel.app/cancel', {
-        method: 'GET',
-        // headers: {
-        //   'Content-Type': 'application/json',
-        //   'x-user-id': '123', // Example user ID
-        //   'x-session-id': 'J5K7P1ZQ' // Example session ID
-        // },
-       // body: JSON.stringify({ query: userInput })
+      const response = await fetch('http://127.0.0.1:8000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: userInput })
       });
 
       const data = await response.json();
-      const botMessage = data.message;
+      const botMessage = data.message.message;
 
       renderBotMessage(botMessage);
 

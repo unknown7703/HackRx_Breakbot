@@ -1,7 +1,10 @@
 import google.generativeai as genai
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from groq import Groq
+from pydantic import BaseModel, Field
+from phi.assistant import Assistant, AssistantMemory
+from phi.llm.groq import Groq
+from actions import book_appointment
+from actions import cancel_appointment
 
 from config import Settings
 from db.pinecone import PineconeManager
@@ -18,19 +21,18 @@ router = APIRouter()
 class QuestionModel(BaseModel):
     text: str
 
-@router.post("/chat")
-def prompt_Controller(question: QuestionModel):
+def prompt_Controller(question: str):
     try:
         question_embedding = genai.embed_content(
             model="models/embedding-001",
-            content=question.text,
+            content=question,
             task_type="retrieval_document",
             title="Question Embedding"
         )['embedding']
 
         query_response = pc.pinecone.Index(settings.pinecone_index).query(
             vector=question_embedding,
-            top_k=10,  # Adjust this number as needed
+            top_k=5,  # Adjust this number as needed
             include_metadata=True
         )
 
@@ -56,22 +58,50 @@ def prompt_Controller(question: QuestionModel):
     Context:
     {' '.join(contexts)}
 
-    User's question: {question.text}
+    User's question: {question}
 
     Your answer:"""
 
-        response = groq_client.chat.completions.create(
-            model="llama3-8b-8192",  # You can change this to the appropriate Groq model
-            messages=[
-                {"role": "system", "content": "You are a helpful AI assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.2,
-            max_tokens=1024,
-        )
+        # response = groq_client.chat.completions.create(
+        #     model="llama3-8b-8192",  # You can change this to the appropriate Groq model
+        #     messages=[
+        #         {"role": "system", "content": "You are a helpful AI assistant."},
+        #         {"role": "user", "content": prompt}
+        #     ],
+        #     temperature=0.2,
+        #     max_tokens=1024,
+        # )
 
-        return {"answer": response.choices[0].message.content}
+        return prompt
 
     except Exception as e:
         print(f"Error in /ask endpoint: {str(e)}")  # For debugging
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+#Assistant Output structure
+
+class ResponseStructure(BaseModel):
+    message:str = Field(..., description="Provide the answer from llm. Don't provide markdown, only provide the answer camelCase")
+
+#Assitant
+assistant=Assistant(
+    llm=Groq(model="llama3-8b-8192"),
+    description="You are a helpful AI assistant. Use the following pieces of context to answer the user's question.OR you can use tools ONLY if it matches If the answer is not contained within the context, say - I don't have enough information to answer that question. Always provide the ansewr in plain text. Don't return the output in markdown, JSON or any other format. Don't return anuy URLs in the response.",
+    tools=[book_appointment,cancel_appointment],
+    output_model=ResponseStructure,
+    read_chat_history=True,
+)
+
+@router.post("/chat")
+def assistant_caller(question: QuestionModel):
+    try:
+        question_string=question.text
+        final_context=prompt_Controller(question_string)
+        response=assistant.run(final_context)
+        memory: AssistantMemory = assistant.memory
+        return {"message":response}
+    except Exception as e:
+        print(f"Error in /ask endpoint: {str(e)}")  # For debugging
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+

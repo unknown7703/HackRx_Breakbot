@@ -8,7 +8,7 @@ WORKDIR /app
 # Copy requirements.txt from the backend directory
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
+RUN pip install langchain_community
 # Copy the contents of the backend directory to /app
 COPY . .
 
