@@ -9,26 +9,28 @@ services:
       - POSTGRES_DB=fastapi_db
 
   fastapi_app:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./backend:/app
     depends_on:
       - db
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/fastapi_db
       - GROQ_API_KEY=${GROQ_API_KEY}
-
-  qdrant:
-    image: qdrant/qdrant:latest
-    ports:
-      - "6333:6333"
-    volumes:
-      - qdrant_data:/qdrant/storage
-    environment:
-      - QDRANT__SERVICE__GRPC_PORT=6334
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /app
+          ignore:
+            - .git/
+            - .venv/
+        - action: rebuild
+          path: requirements.txt
 
 volumes:
   postgres_data:
-  qdrant_data:

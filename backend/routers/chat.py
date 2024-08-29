@@ -1,10 +1,15 @@
 import os
-
 from groq import Groq
-#os.environ['GROQ_API_KEY']
-client = Groq(
-    api_key=os.environ.get("GROQ_API_KEY"),
-)
+
+from config import Settings
+
+settings = Settings()
+api_key = settings.groq_api_key
+
+if not api_key:
+    raise ValueError("GROQ_API_KEY environment variable is not set")
+
+client = Groq(api_key=api_key)
 
 def post_chat_query(query_string: str):
     chat_completion = client.chat.completions.create(
