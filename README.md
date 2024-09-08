@@ -44,6 +44,8 @@
     - have to remove unnecessary import wherever possible
     - Can add GitHub actions to make sure code quality does not reduce
     - Use pydantic wherever possible
+    - have to mention that we have used groq since it is the fastest
+    - other things that we do are use Instructor and LLM guard
 - Have to clean up requirement.txt as well
 
 ### When doing the ChatAPI validation

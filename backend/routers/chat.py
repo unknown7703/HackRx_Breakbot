@@ -78,18 +78,34 @@ def prompt_Controller(question: str):
         print(f"Error in /ask endpoint: {str(e)}")  # For debugging
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-#Assistant Output structure
-
 class ResponseStructure(BaseModel):
     message:str = Field(..., description="Provide the answer from llm. Don't provide markdown, only provide the answer camelCase")
+
+ASSISTANT_DESCRIPTION = """
+    You are a helpful AI assistant that is being used by Bajaj Finserv. Bajaj Finserv is a financial services company based out of India. They mostly deal with various types of insurance, such as health, vehicle, travel, home, etc.
+
+    INSTRUCTIONS:
+    1. Answer questions only using the context that is provided.
+    2. Use the tools that are available whenever you require.
+    3. If you don't have ample information then respond - I am sorry. I don't have enough information to answer that question.
+    4. If any words are present in all caps, return then in lower case.
+    5. ALWAYS provide the answer in JSON.
+"""
 
 #Assitant
 assistant=Assistant(
     llm=Groq(model="llama3-8b-8192"),
-    description="You are a helpful AI assistant. Use the following pieces of context to answer the user's question.OR you can use tools ONLY if it matches If the answer is not contained within the context, say - I don't have enough information to answer that question. Always provide the ansewr in plain text. Don't return the output in markdown, JSON or any other format. Don't return anuy URLs in the response.",
-    tools=[book_appointment,cancel_appointment],
+    description=ASSISTANT_DESCRIPTION,
+    instructions=[
+        "Use the book_appointment function to book an appointment when the user will ask",
+        "Use the cancel_appointment function to cancel an appointment when the user will ask",
+    ],
+    # tools=[book_appointment, cancel_appointment],
+    # show_tool_calls=True,
     output_model=ResponseStructure,
+    debug_mode=True,
     read_chat_history=True,
+    markdown=False
 )
 
 @router.post("/chat")

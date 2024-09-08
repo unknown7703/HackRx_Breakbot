@@ -37,7 +37,7 @@ const ChatBotWindow = () => {
   };
 
   const renderBotMessage = (message) => {
-    addMessageToChatHistory('bot', message);
+    addMessageToChatHistory('bot', message[0]);
   };
 
   const handleInputChange = (e) => {
