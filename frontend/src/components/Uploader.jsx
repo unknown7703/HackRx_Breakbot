@@ -13,7 +13,7 @@ const Uploader =()=>{
         Upload Your File
       </button>
       <input onChange={handleChange} multiple={false} ref={fileInputRef} type='file'hidden/>
-      <p className='text-grey-100'>file types - pdf,ppt,docx</p>
+      <p className='text-grey-100 dark:text-white'>file types - pdf,ppt,docx</p>
     </div>
   )
 }

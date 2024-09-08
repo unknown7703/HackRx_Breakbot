@@ -51,20 +51,20 @@ const ChatBotWindow = () => {
   };
 
   return (
-    <div className="w-[100%] mx-auto h-[100%] border border-gray-300 rounded-lg flex flex-col justify-between p-4 bg-white shadow-lg">
+    <div className="w-[100%] mx-auto h-[100%] rounded-lg flex flex-col justify-between p-4 bg-white shadow-lg dark:bg-[#212121]">
       <div className="flex-grow overflow-y-auto mb-4 space-y-2">
         {chatHistory.map((chat, index) => (
           <Chat key={index} sender={chat.sender} message={chat.message} />
         ))}
       </div>
-      <div className="flex">
+      <div className="flex dark:bg-[#2F2F2F]">
         <input
           type="text"
           value={userInput}
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           placeholder="Type your message..."
-          className="flex-grow p-2 border border-gray-300 rounded-l focus:outline-none"
+          className="flex-grow p-2 border border-gray-300 rounded-l focus:outline-none dark:bg-[#2F2F2F]"
         />
         <button
           onClick={handleSendMessage}

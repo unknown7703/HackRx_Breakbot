@@ -7,7 +7,7 @@ const Layout =()=>{
             <div>
                 <Navbar/>
             </div>
-            <div className="flex flex-row w-[100%] h-[90%]">
+            <div className="flex flex-row w-[100%] h-[90%] dark:bg-[#212121]">
                 <div className="hidden md:flex flex-row w-[20%] m-1 justify-center items-center border-solid border-2 border-sky-500 rounded-md"><Uploader/></div>
                 <div className="flex flex-row w-[100%] m-1 justify-center items-center border-solid border-2 border-sky-500 rounded-md md:w-[80%]"><ChatBotWindow/></div>
             </div>
