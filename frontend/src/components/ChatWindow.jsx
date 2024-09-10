@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect,useRef } from 'react';
 import Chat from './Chat';
 
 const ChatBotWindow = () => {
   const [chatHistory, setChatHistory] = useState([]);
   const [userInput, setUserInput] = useState(''); 
+  const chatRef = useRef(null);
 
+  //user message to chat history
   const addMessageToChatHistory = (sender, message) => {
     setChatHistory((prevChatHistory) => [
       ...prevChatHistory,
       { sender, message }
     ]);
   };
+
+  // call chat api
   const handleSendMessage = async () => {
+    setUserInput('');
     if (userInput.trim() === '') return; 
     addMessageToChatHistory('user', userInput);
 
@@ -33,13 +38,22 @@ const ChatBotWindow = () => {
       console.error('Error sending message:', error);
     }
 
-    setUserInput('');
   };
 
+    //add response from api to char render list
   const renderBotMessage = (message) => {
     addMessageToChatHistory('bot', message);
   };
 
+  //auto scroll to bottom in chat window
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
+  
+
+  //event changes
   const handleInputChange = (e) => {
     setUserInput(e.target.value);
   };
@@ -52,11 +66,11 @@ const ChatBotWindow = () => {
 
   return (
     <div className="w-[100%] mx-auto h-[100%] rounded-lg flex flex-col justify-between p-4 bg-white shadow-lg dark:bg-[#212121]">
-      <div className="flex-grow overflow-y-auto mb-4 space-y-2">
+      <div ref={chatRef}  className="flex-grow overflow-y-auto mb-4 space-y-2">
         {chatHistory.map((chat, index) => (
           <Chat key={index} sender={chat.sender} message={chat.message} />
         ))}
-      </div>
+      </div >
       <div className="flex dark:bg-[#2F2F2F]">
         <input
           type="text"
@@ -64,7 +78,7 @@ const ChatBotWindow = () => {
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           placeholder="Type your message..."
-          className="flex-grow p-2 border border-gray-300 rounded-l focus:outline-none dark:bg-[#2F2F2F]"
+          className="flex-grow p-2 border border-gray-300 rounded-l focus:outline-none dark:bg-[#2F2F2F] text-white"
         />
         <button
           onClick={handleSendMessage}
