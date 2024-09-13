@@ -42,7 +42,7 @@ const ChatBotWindow = () => {
 
     //add response from api to char render list
   const renderBotMessage = (message) => {
-    addMessageToChatHistory('bot', message);
+    addMessageToChatHistory('bot', message[0]);
   };
 
   //auto scroll to bottom in chat window
