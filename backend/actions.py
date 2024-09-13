@@ -1,18 +1,15 @@
 import httpx
 import google.generativeai as genai
 import json
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
-from groq import Groq
-
+from fastapi import HTTPException
 from config import Settings
 from db.pinecone import PineconeManager
 
 settings = Settings()
 genai.configure(api_key=settings.google_api_key)
-
 pc = PineconeManager()
-groq_client = Groq(api_key=settings.groq_api_key)
+
+
 # book an appointment
 def book_appointment(question: str) -> str:
     """Use this function to book an appointment."""
@@ -37,18 +34,20 @@ def book_appointment(question: str) -> str:
 # context fetcher
 def answer_query(question: str):
     try:
+        # make vector embedding of the question
         question_embedding = genai.embed_content(
             model="models/embedding-001",
             content=question,
             task_type="retrieval_document",
             title="Question Embedding"
         )['embedding']
-
+        # fetch semantic search by matching question embedding with existing chunks from document
         query_response = pc.pinecone.Index(settings.pinecone_index).query(
             vector=question_embedding,
             top_k=10,  # Adjust this number as needed
             include_metadata=True
         )
+        #construct new prompt if match found and return prompt
         contexts = []
         for match in query_response['matches']:
             contexts.append(match['metadata']['text'])

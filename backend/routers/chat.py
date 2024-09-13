@@ -1,13 +1,11 @@
-import google.generativeai as genai
 import json
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from groq import Groq
 from actions import book_appointment
 from actions import answer_query
-
 from config import Settings
-from db.pinecone import PineconeManager
+
 
 # Loading environment variables
 settings = Settings()
@@ -16,8 +14,9 @@ client = Groq(api_key=settings.groq_api_key)
 router = APIRouter()
 
 class QuestionModel(BaseModel):
-    text: str
+    query: str
 
+# main llm caller with subcalling 
 def prompt_Controller(user_prompt):
     messages=[
         {
@@ -26,7 +25,7 @@ def prompt_Controller(user_prompt):
         },
         {
             "role": "user",
-            "content": user_prompt.text,
+            "content": user_prompt.query,
         }
     ]
     tools = [
@@ -65,6 +64,7 @@ def prompt_Controller(user_prompt):
             },
         },
     ]
+    # first llm call to decide further actions needed to be performed eg. retirval, api call etc
     response = client.chat.completions.create(
         model="llama3-8b-8192",
         messages=messages,
@@ -82,20 +82,14 @@ def prompt_Controller(user_prompt):
             "answer_query": answer_query,
         }
         messages.append(response_message)
+        #for each tool call append message with relevant tool detail
         for tool_call in tool_calls:
             function_name = tool_call.function.name
-            print("function_name",function_name)
             function_to_call = available_functions[function_name]
-            print("function_to_call",function_to_call)
             function_args = json.loads(tool_call.function.arguments)
-            print("function_args",function_args)
-
             function_response = function_to_call(
                 question=function_args.get("question")
             )
-            
-            
-            print("function_response",function_response)
             messages.append(
                 {
                     "tool_call_id": tool_call.id,
@@ -104,18 +98,19 @@ def prompt_Controller(user_prompt):
                     "content": function_response,
                 }
             )
+        # second llm call based on newly constructed message   
         second_response = client.chat.completions.create(
             model="llama3-8b-8192",
             messages=messages
         )
-        return {"message":second_response.choices[0].message.content}
+        return second_response.choices[0].message.content
 
 @router.post("/chat")
 def assistant_caller(question: QuestionModel):
     try:
-        question_string=question.text
+        question_string=question.query
         response=prompt_Controller(question)
-        return {"message":response}
+        return {"bot_message":response}
     except Exception as e:
         print(f"Error in /ask endpoint: {str(e)}")  # For debugging
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
