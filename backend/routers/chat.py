@@ -22,7 +22,7 @@ def prompt_Controller(user_prompt):
     messages=[
         {
             "role": "system",
-            "content": "You are a good assistant , you use answer query tool to answer question , do not answer question/query on your own ever, only use tool to answer. If requested specifiaclly to book appointment you can use book appointment tool to do so ."
+            "content": "You are a good assistant , you use answer query tool to answer question , do not answer question/query on your own ever, only use tool to answer. If requested specifiaclly to book appointment you can use book appointment tool to do so , only reply the returning message from the tool call do not add any of your own answer"
         },
         {
             "role": "user",
