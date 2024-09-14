@@ -26,11 +26,11 @@ const ChatBotWindow = () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ text: userInput })
+        body: JSON.stringify({ query: userInput })
       });
 
       const data = await response.json();
-      const botMessage = data.message.message;
+      const botMessage = data.bot_message;
 
       renderBotMessage(botMessage);
 
@@ -42,7 +42,7 @@ const ChatBotWindow = () => {
 
     //add response from api to char render list
   const renderBotMessage = (message) => {
-    addMessageToChatHistory('bot', message[0]);
+    addMessageToChatHistory('bot', message);
   };
 
   //auto scroll to bottom in chat window
