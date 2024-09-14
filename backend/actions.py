@@ -1,4 +1,5 @@
 import httpx
+import cohere
 import google.generativeai as genai
 import json
 from fastapi import HTTPException
@@ -7,6 +8,7 @@ from db.pinecone import PineconeManager
 
 settings = Settings()
 genai.configure(api_key=settings.google_api_key)
+co_client=cohere.Client(api_key=settings.cohere_api_key)
 pc = PineconeManager()
 
 
@@ -34,6 +36,7 @@ def book_appointment(question: str) -> str:
 # context fetcher
 def answer_query(question: str):
     try:
+        print("question to fetch: ",question)
         # make vector embedding of the question
         question_embedding = genai.embed_content(
             model="models/embedding-001",
@@ -44,21 +47,38 @@ def answer_query(question: str):
         # fetch semantic search by matching question embedding with existing chunks from document
         query_response = pc.pinecone.Index(settings.pinecone_index).query(
             vector=question_embedding,
-            top_k=10,  # Adjust this number as needed
+            top_k=20,  # Adjust this number as needed
             include_metadata=True
         )
         #construct new prompt if match found and return prompt
-        contexts = []
-        for match in query_response['matches']:
-            contexts.append(match['metadata']['text'])
-        if not contexts:
-            return {"answer": "I found some matches, but they don't contain the expected metadata. Please check your document upload process."}
+        docs = {x["metadata"]['text']: i for i, x in enumerate(query_response["matches"])}
+
+        rerank_docs = co_client.rerank(
+            model="rerank-english-v3.0",
+            query=question, 
+            documents=list(docs.keys()), 
+            top_n=5, 
+            return_documents=True
+        )
+        # print("rerank_docs...",rerank_docs)
+
+        # Extract reranked documents
+        reranked_texts = [doc.document.text for doc in rerank_docs.results]
+        # print("////////////////////////////////////////////RERANKED/////////////////////////////////")
+        # print(reranked_texts)
+
+        # contexts = []
+        # for match in query_response['matches']:
+        #     contexts.append(match['metadata']['text'])
+        # if not contexts:
+        #     return {"answer": "I found some matches, but they don't contain the expected metadata. Please check your document upload process."}
        
         prompt = f"""You are a helpful AI assistant. Use the following pieces of context to answer the user's question.In answer don't mentioned the context , don't say based on context provided. If the answer is not contained within the context, say "I don't have enough information to answer that question."
         Context:
-        {' '.join(contexts)}
+        {' '.join(reranked_texts)}
         User's question: {question}
-        Your answer:"""
+        """
+        # print(prompt)
         return prompt
     except Exception as e:
         print(f"Error in /ask endpoint: {str(e)}")  # For debugging

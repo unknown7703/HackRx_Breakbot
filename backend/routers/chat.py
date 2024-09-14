@@ -8,16 +8,26 @@ from config import Settings
 
 # Loading environment variables
 settings = Settings()
-client = Groq(api_key=settings.groq_api_key)
-
+current_client=1
 router = APIRouter()
 #query model validation
 class QuestionModel(BaseModel):
     query: str
 
+client=Groq(api_key=settings.groq_api_key)
+
+def client_switch():
+    global current_client
+    global client
+    if current_client==0:
+        client=Groq(api_key=settings.groq_api_key)
+        current_client=1
+    else:
+        client=Groq(api_key=settings.groq_api_key_alt)
+        current_client=0
 
 #chat memory
-chat_memory=["Use the following as your memory ,only answer question asked above relevant to these text - "]
+chat_memory=["Use the following as your memory ,only answer question asked above relevant to these text MEMORY- "]
 def chat_memory_content() -> str:
     chat_history=""
     for i in chat_memory:
@@ -25,6 +35,7 @@ def chat_memory_content() -> str:
     return chat_history
 
 def add_new_chat_history(chat: str):
+    print("current client :",current_client)
     if len(chat_memory)>11:
         chat_memory.pop(1)
     chat_memory.append(chat)
@@ -40,7 +51,7 @@ def prompt_Controller(user_prompt):
     messages=[
         {
             "role": "system",
-            "content": "You are a good assistant , you use answer query tool to answer question or answer from memory given in context , do not answer question/query on your own ever, only use tool or memory to answer. If requested specifiaclly to book appointment you can use book appointment tool to do so , only reply the returning message from the tool call do not add any of your own answer"
+            "content": "You use answer query tool to answer question or answer from memory given in context , do not answer question/query on your own ever, only use tool or memory to answer. If requested specifiaclly to book appointment you can use book appointment tool to do so ,elaborate the final answer in your own words strictly answer MINIMUM 100 words"
         },
         {
             "role": "user",
@@ -93,7 +104,7 @@ def prompt_Controller(user_prompt):
         messages=messages,
         tools=tools,
         tool_choice="auto",
-        temperature=0.2,
+        temperature=0.5,
         max_tokens=1024
     )
     response_message = response.choices[0].message
@@ -132,7 +143,8 @@ def prompt_Controller(user_prompt):
 @router.post("/chat")
 def assistant_caller(question: QuestionModel):
     try:
-        question_string=question.query
+        client_switch()
+        #question_string=question.query
         response=prompt_Controller(question)
         return {"bot_message":response}
     except Exception as e:
