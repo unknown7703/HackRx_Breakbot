@@ -5,6 +5,6 @@ class Settings(BaseSettings):
     google_api_key: str
     pinecone_api_key: str
     pinecone_index: str
-    
-
+    cohere_api_key: str
+    groq_api_key_alt: str
     model_config = SettingsConfigDict(env_file="../.env")
