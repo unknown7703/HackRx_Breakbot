@@ -73,7 +73,7 @@ def get_embeddings(texts: List[str]) -> List[List[float]]:
         logger.info(f"Embedding generated for chunk {i} in {(end_embedding_time - start_embedding_time).total_seconds()} seconds")
     return embeddings_list
 
-ALLOWED_EXTENSIONS = ('.pdf', '.doc', '.docx', '.ppt', '.pptx')
+ALLOWED_EXTENSIONS = ('.pdf', '.docx', '.pptx')
 
 @router.post("/upload")
 async def upload_controller(
@@ -92,7 +92,7 @@ async def upload_controller(
         logger.info(f"Processing file: {file.filename}")
         
         if not file.filename.endswith(ALLOWED_EXTENSIONS):
-            raise HTTPException(status_code=400, detail=f"Unsupported file format: {file.filename}")
+            raise HTTPException(status_code=400, detail=f"Unsupported file format: {file.filename}. Supported file formats are: .pdf, .docx, .pptx")
         
         texts = process_file(file)
         all_texts.extend(texts)
