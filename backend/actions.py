@@ -1,7 +1,10 @@
 import httpx
 import logging
 
+import cohere
 import google.generativeai as genai
+import json
+from fastapi import HTTPException
 from datetime import datetime
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -20,10 +23,11 @@ logger = logging.getLogger(__name__)
 
 settings = Settings()
 genai.configure(api_key=settings.GOOGLE_API_KEY)
-
+co_client=cohere.Client(api_key=settings.cohere_api_key)
 pc = PineconeManager()
-groq_client = Groq(api_key=settings.GROQ_API_KEY)
 
+
+# book an appointment
 def book_appointment(question: str) -> str:
     """Use this function to book an appointment."""
     try:
@@ -47,6 +51,8 @@ def book_appointment(question: str) -> str:
 
 def answer_query(question: str):
     try:
+        print("question to fetch: ",question)
+        # make vector embedding of the question
         logger.info("Starting answer_query function")
         start_time = datetime.now()
 
@@ -63,9 +69,38 @@ def answer_query(question: str):
         query_start = datetime.now()
         query_response = pc.pinecone.Index(settings.PINECONE_INDEX).query(
             vector=question_embedding,
-            top_k=10,
+            top_k=20,  # Adjust this number as needed
             include_metadata=True
         )
+        #construct new prompt if match found and return prompt
+        docs = {x["metadata"]['text']: i for i, x in enumerate(query_response["matches"])}
+
+        rerank_docs = co_client.rerank(
+            model="rerank-english-v3.0",
+            query=question, 
+            documents=list(docs.keys()), 
+            top_n=5, 
+            return_documents=True
+        )
+        # print("rerank_docs...",rerank_docs)
+
+        # Extract reranked documents
+        reranked_texts = [doc.document.text for doc in rerank_docs.results]
+        # print("////////////////////////////////////////////RERANKED/////////////////////////////////")
+        # print(reranked_texts)
+
+        # contexts = []
+        # for match in query_response['matches']:
+        #     contexts.append(match['metadata']['text'])
+        # if not contexts:
+        #     return {"answer": "I found some matches, but they don't contain the expected metadata. Please check your document upload process."}
+       
+        prompt = f"""You are a helpful AI assistant. Use the following pieces of context to answer the user's question.In answer don't mentioned the context , don't say based on context provided. If the answer is not contained within the context, say "I don't have enough information to answer that question."
+        Context:
+        {' '.join(reranked_texts)}
+        User's question: {question}
+        """
+        # print(prompt)
         query_end = datetime.now()
         logger.info(f"Pinecone query finished in {(query_end - query_start).total_seconds()} seconds")
 
