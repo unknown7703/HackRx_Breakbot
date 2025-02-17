@@ -110,7 +110,7 @@ def prompt_Controller(user_prompt):
             max_tokens=1024
         )
     except Exception as e:
-        print(f"Error in first llm call: {str(e)}")  # For debugging
+        print(f"Error in first llm call: {str(e)} {settings.groq_api_key}")  # For debugging
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
     
     response_message = response.choices[0].message
@@ -159,5 +159,5 @@ def assistant_caller(question: QuestionModel):
         response=prompt_Controller(question)
         return {"bot_message":response}
     except Exception as e:
-        print(f"Error in /ask endpoint: {str(e)}")  # For debugging
+        print(f"Error in /chat endpoint: {str(e)}")  # For debugging
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

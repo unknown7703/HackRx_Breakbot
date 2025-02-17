@@ -11,31 +11,19 @@ settings = Settings()
 genai.configure(api_key=settings.google_api_key)
 co_client=cohere.Client(api_key=settings.cohere_api_key)
 pc = PineconeManager()
-mailgun_domain_name=(settings.mail_gun_domain)
+#mailgun_domain_name=(settings.mail_gun_domain)
 
 # book an appointment
-def send_simple_message(question:str):
-    try:
-        print("SENT TO:",question)
-        return requests.post(
-            "https://api.mailgun.net/v3/sandboxbb2d48d0884645af91940da27085f932.mailgun.org/messages",
-            auth=("api", settings.mail_gun_api_key),
-            data={"from": "FinBOT <mailgun@sandboxbb2d48d0884645af91940da27085f932.mailgun.org>",
-                "to": [question, "YOU@sandboxbb2d48d0884645af91940da27085f932.mailgun.org"],
-                "subject": "Booking Successfull",
-                "text": "This is a mock email for testing purpose only"})
-    except Exception as e:
-        return f"Error at smtp call: {str(e)}"
-    
-
+#
 def book_appointment(question: str) -> str:
     """Use this function to book an appointment."""
     try:
-        send_simple_message(question)
+        # send_simple_message(question)
+        print("hh")
     except Exception as e:
         return f"Error: {str(e)}"  
     try:
-        response = httpx.get('https://21bbs0122-bajaj-fullstack.vercel.app/book')
+        response = httpx.get('https://21-bbs-0122bajaj-fullstack.vercel.app/book')
         response.raise_for_status()  
         response_json = response.json()
         message = response_json.get('message', 'No message found')  
@@ -75,8 +63,8 @@ def answer_query(question: str):
 
         # Extract reranked documents
         reranked_texts = [doc.document.text for doc in rerank_docs.results]
-        # print("////////////////////////////////////////////RERANKED/////////////////////////////////")
-        # print(reranked_texts)
+        print("////////////////////////////////////////////RERANKED/////////////////////////////////")
+        print(reranked_texts)
 
         # contexts = []
         # for match in query_response['matches']:
