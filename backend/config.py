@@ -7,4 +7,6 @@ class Settings(BaseSettings):
     pinecone_index: str
     cohere_api_key: str
     groq_api_key_alt: str
+    mail_gun_api_key: str
+    mail_gun_domain: str
     model_config = SettingsConfigDict(env_file="../.env")
