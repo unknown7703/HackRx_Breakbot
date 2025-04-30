@@ -1,16 +1,20 @@
 import React from 'react';
 
-// Chat component to display individual chat messages
 const Chat = ({ sender, message }) => {
   const isUser = sender === 'user';
-  const chatContainerClass = isUser ? 'justify-end' : 'justify-start';
-  const chatBubbleClass = isUser ? ' text-right bg-blue-600 dark:bg-[#2F2F2F] text-white' : 'bg-gray-200 text-left';
-  const chatBubbleUserName = isUser ? 'User' : 'FinBot';
   return (
-    <div className={`flex ${chatContainerClass}`}>
-      <div className={`max-w-xs p-3 rounded-lg drop-shadow-md ${chatBubbleClass}`}>
-        <p className='font-bold'>{chatBubbleUserName}</p>
-        {message}
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div
+        className={`max-w-lg px-5 py-3 rounded-2xl shadow
+          ${isUser
+            ? 'bg-cyan-500 text-black rounded-br-none'
+            : 'bg-[#18191a] text-gray-200 rounded-bl-none border border-[#232323]'}
+          `}
+      >
+        <span className="block text-xs font-semibold mb-1 opacity-60">
+          {isUser ? 'You' : 'FinBot'}
+        </span>
+        <span className="text-base break-words">{message}</span>
       </div>
     </div>
   );

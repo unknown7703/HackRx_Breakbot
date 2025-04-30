@@ -1,88 +1,69 @@
-import React, { useState,useEffect,useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Chat from './Chat';
 
 const ChatBotWindow = () => {
   const [chatHistory, setChatHistory] = useState([]);
-  const [userInput, setUserInput] = useState(''); 
+  const [userInput, setUserInput] = useState('');
   const chatRef = useRef(null);
 
-  //user message to chat history
+  // Add message to chat history
   const addMessageToChatHistory = (sender, message) => {
-    setChatHistory((prevChatHistory) => [
-      ...prevChatHistory,
-      { sender, message }
-    ]);
+    setChatHistory((prev) => [...prev, { sender, message }]);
   };
 
-  // call chat api
+  // Send message handler
   const handleSendMessage = async () => {
-    setUserInput('');
-    if (userInput.trim() === '') return; 
+    if (userInput.trim() === '') return;
     addMessageToChatHistory('user', userInput);
-
+    setUserInput('');
     try {
       const response = await fetch('http://localhost:8080/chat/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ query: userInput })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: userInput }),
       });
-
       const data = await response.json();
-      const botMessage = data.bot_message;
-
-      renderBotMessage(botMessage);
-
+      addMessageToChatHistory('bot', data.bot_message);
     } catch (error) {
-      console.error('Error sending message:', error);
+      addMessageToChatHistory('bot', 'Sorry, something went wrong.');
     }
-
   };
 
-    //add response from api to char render list
-  const renderBotMessage = (message) => {
-    addMessageToChatHistory('bot', message);
-  };
-
-  //auto scroll to bottom in chat window
+  // Auto-scroll
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
   }, [chatHistory]);
-  
 
-  //event changes
-  const handleInputChange = (e) => {
-    setUserInput(e.target.value);
-  };
-
+  // Input handlers
+  const handleInputChange = (e) => setUserInput(e.target.value);
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
-    }
+    if (e.key === 'Enter') handleSendMessage();
   };
 
   return (
-    <div className="w-[100%] mx-auto h-[100%] rounded-lg flex flex-col justify-between p-4 bg-white shadow-lg dark:bg-[#212121]">
-      <div ref={chatRef}  className="flex-grow overflow-y-auto mb-4 space-y-2">
-        {chatHistory.map((chat, index) => (
-          <Chat key={index} sender={chat.sender} message={chat.message} />
+    <div className="w-full h-full rounded-2xl flex flex-col justify-between p-4 bg-black shadow-2xl border border-[#232323]">
+      <div
+        ref={chatRef}
+        className="flex-grow overflow-y-auto mb-4 space-y-4 scrollbar-thin scrollbar-thumb-[#232323] scrollbar-track-black"
+      >
+        {chatHistory.map((chat, idx) => (
+          <Chat key={idx} sender={chat.sender} message={chat.message} />
         ))}
-      </div >
-      <div className="flex dark:bg-[#2F2F2F]">
+      </div>
+      <div className="flex bg-[#18191a] rounded-xl shadow-inner border border-[#232323]">
         <input
           type="text"
           value={userInput}
           onChange={handleInputChange}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           placeholder="Type your message..."
-          className="flex-grow p-2 border border-gray-300 rounded-l focus:outline-none dark:bg-[#2F2F2F] text-white"
+          className="flex-grow px-4 py-3 bg-transparent text-white placeholder-gray-500 focus:outline-none rounded-l-xl"
         />
         <button
           onClick={handleSendMessage}
-          className="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 transition-colors"
+          className="bg-cyan-500 hover:bg-cyan-400 transition-colors px-6 py-3 rounded-r-xl font-semibold text-black"
         >
           Send
         </button>
