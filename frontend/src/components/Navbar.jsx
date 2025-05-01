@@ -38,7 +38,8 @@ const Navbar = () => {
             type="button"
             className="text-black bg-cyan-500 hover:bg-cyan-400 transition-colors focus:ring-2 focus:ring-cyan-600 font-medium rounded-lg text-sm px-4 py-2"
           >
-            Github
+            <a href="https://github.com/unknown7703/HackRx_Breakbot">Github</a>
+            
           </button>
           
           <button
